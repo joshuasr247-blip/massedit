@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Trash2,
   Film,
+  Pencil,
 } from 'lucide-react';
 import { useStore } from '../stores/useStore';
 import { C, BOX_COLORS } from '../styles/tokens';
@@ -15,6 +16,7 @@ export default function BoxPanel() {
   const {
     boxes,
     addBox,
+    renameBox,
     uploadClipsToBox,
     removeClip,
     selectedBox,
@@ -153,6 +155,7 @@ export default function BoxPanel() {
               }
               uploadProgress={uploadProgress[box.id]}
               onRemoveClip={(clipId) => removeClip(box.id, clipId)}
+              onRename={(newName) => renameBox(box.id, newName)}
               formatDuration={formatDuration}
             />
           ))
@@ -201,8 +204,33 @@ function BoxCard({
   onUpload,
   uploadProgress,
   onRemoveClip,
+  onRename,
   formatDuration,
 }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(box.name);
+  const inputRef = React.useRef(null);
+
+  const startEditing = (e) => {
+    e.stopPropagation();
+    setEditName(box.name);
+    setIsEditing(true);
+    setTimeout(() => inputRef.current?.select(), 0);
+  };
+
+  const commitRename = () => {
+    const trimmed = editName.trim();
+    if (trimmed && trimmed !== box.name) {
+      onRename(trimmed);
+    }
+    setIsEditing(false);
+  };
+
+  const cancelEditing = () => {
+    setEditName(box.name);
+    setIsEditing(false);
+  };
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: (files) => onUpload(files),
   });
@@ -291,16 +319,45 @@ function BoxCard({
         />
 
         {/* Box Name */}
-        <span
-          style={{
-            flex: 1,
-            fontSize: '13px',
-            fontWeight: 500,
-            color: C.text,
-          }}
-        >
-          {box.name}
-        </span>
+        {isEditing ? (
+          <input
+            ref={inputRef}
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            onBlur={commitRename}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') commitRename();
+              if (e.key === 'Escape') cancelEditing();
+            }}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              flex: 1,
+              fontSize: '13px',
+              fontWeight: 500,
+              color: C.text,
+              backgroundColor: C.bgHover,
+              border: `1px solid ${C.accent}`,
+              borderRadius: '4px',
+              padding: '2px 6px',
+              outline: 'none',
+            }}
+            autoFocus
+          />
+        ) : (
+          <span
+            onDoubleClick={startEditing}
+            style={{
+              flex: 1,
+              fontSize: '13px',
+              fontWeight: 500,
+              color: C.text,
+              cursor: 'text',
+            }}
+            title="Double-click to rename"
+          >
+            {box.name}
+          </span>
+        )}
 
         {/* Clip Count Badge */}
         <div
