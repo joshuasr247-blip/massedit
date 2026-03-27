@@ -72,6 +72,25 @@ export const useStore = create((set, get) => ({
     }
   },
 
+  // Rename box
+  renameBox: async (boxId, newName) => {
+    const project = get().currentProject;
+    if (!project) return;
+
+    try {
+      const updated = await api.updateBox(project.id, boxId, { name: newName });
+      set((state) => ({
+        boxes: state.boxes.map((b) =>
+          b.id === boxId ? { ...b, name: updated.name } : b
+        ),
+      }));
+      return updated;
+    } catch (error) {
+      console.error('Failed to rename box', error);
+      throw error;
+    }
+  },
+
   // Upload clips to box
   uploadClipsToBox: async (boxId, files, onProgress) => {
     const project = get().currentProject;
