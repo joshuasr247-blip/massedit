@@ -21,7 +21,7 @@ async function request(endpoint, options = {}) {
   if (contentType && contentType.includes('application/json')) {
     return response.json();
   }
-  return response;
+  return response
 }
 
 // Projects
@@ -50,7 +50,7 @@ export async function createBox(projectId, name, color) {
 
 export async function updateBox(projectId, boxId, updates) {
   return request(`/projects/${projectId}/boxes/${boxId}`, {
-    method: 'PATCH',
+    method: 'PUT',
     body: JSON.stringify(updates),
   });
 }
